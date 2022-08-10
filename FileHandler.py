@@ -11,7 +11,6 @@ class FileHandler:
         except:
             return []
 
-
     def write_dict_list_to_json_file(self, path: str, dict: List[Dict[str, Union[str, int]]]):
         with open(path, 'w') as write_file:
             json.dump(dict, write_file)

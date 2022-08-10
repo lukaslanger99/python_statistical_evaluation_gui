@@ -5,7 +5,6 @@ from tkcalendar import DateEntry
 from FileHandler import FileHandler as fh
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from random import randint
 
 class App(tk.Frame):
@@ -115,7 +114,7 @@ class App(tk.Frame):
         bar1.get_tk_widget().grid(row=3, column=1)
 
     def print_line_chart(self, event_list_selection, filter_list_selection=None):
-        if event_list_selection == []:
+        if not event_list_selection:
             return
         if filter_list_selection is None:
             filter_list_selection = self.labels
