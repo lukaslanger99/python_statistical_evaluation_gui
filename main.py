@@ -1,5 +1,6 @@
 from datetime import datetime
 import tkinter as tk
+from tkinter import messagebox
 from tkcalendar import DateEntry
 from FileHandler import FileHandler as fh
 from matplotlib.figure import Figure
@@ -11,19 +12,20 @@ class App(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-
         self.labels = fh.read_json_file_to_dict_list(fh, "labels.json")
         self.events = fh.read_json_file_to_dict_list(fh, "events.json")
-
         self.init_date_picker()
         self.init_event_picker()
         self.init_filter_list()
         self.init_config_buttons()
-        
-        self.init_graph()
+        self.init_line_chart()
 
     def addLabel(self, name, type):
-        self.labels.append({"name": name.replace(" ", "_"), "type": type})
+        label_name = name.replace(" ", "_")
+        if any(l["name"] == label_name for l in self.labels):
+            messagebox.showerror("Add Label Error", "Label name is already used!")
+            return
+        self.labels.append({"name": label_name, "type": type})
         fh.write_dict_list_to_json_file(fh, "labels.json", self.labels)
 
     def addEvent(self, description, date, label_entry_list):
@@ -58,7 +60,7 @@ class App(tk.Frame):
         self.event_list.grid(row=1, column=0)
 
         def eventpicker_submit():
-            self.print_chart(self.get_selected_events())
+            self.print_line_chart(self.get_selected_events())
             self.select_all_filter_checkbox_var.set(1)
             for checkbox in self.filter_checkboxes:
                 checkbox["value"].set(1)
@@ -87,7 +89,7 @@ class App(tk.Frame):
                 if checkbox["value"].get():
                     filter_selected_labels.append({"name": checkbox["checkbox_label_for"], "type": "Integer"})
             if filter_selected_labels != []:
-                self.print_chart(self.get_selected_events(), filter_selected_labels)
+                self.print_line_chart(self.get_selected_events(), filter_selected_labels)
         tk.Button(self.parent, text="Update", command=submit_filters).grid(row=3, column=0)
 
     def get_selected_events(self):
@@ -105,14 +107,14 @@ class App(tk.Frame):
         tk.Button(self.parent, text="New Event", command=self.listener_new_event_button_submit).grid(row=0, column=8)
         tk.Button(self.parent, text="Configure Labels", command=self.listener_config_button_submit).grid(row=1, column=8)
 
-    def init_graph(self):
+    def init_line_chart(self):
         self.figure = Figure(figsize=(4,3), dpi=100)
         self.subplot = self.figure.add_subplot(111)
         bar1 = FigureCanvasTkAgg(self.figure, self.parent)
         bar1.name='latheesh'
         bar1.get_tk_widget().grid(row=3, column=1)
 
-    def print_chart(self, event_list_selection, filter_list_selection=None):
+    def print_line_chart(self, event_list_selection, filter_list_selection=None):
         if event_list_selection == []:
             return
         if filter_list_selection is None:
