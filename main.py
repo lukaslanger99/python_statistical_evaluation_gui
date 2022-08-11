@@ -59,15 +59,21 @@ class App(tk.Frame):
         self.event_list.grid(row=1, column=0)
 
         def eventpicker_submit():
+            self.set_text_number_of_selected_events_label()
             self.print_line_chart(self.get_selected_events())
             self.select_all_filter_checkbox_var.set(1)
             for checkbox in self.filter_checkboxes:
                 checkbox["value"].set(1)
         tk.Button(self.parent, text="Select Events", command=eventpicker_submit).grid(row=1, column=1)
+        self.number_of_selected_events_label = tk.Label(self.parent, text="Selected Events: {}".format(len(self.event_list.curselection())))
+        self.number_of_selected_events_label.grid(row=2, column=0)
+
+    def set_text_number_of_selected_events_label(self):
+        self.number_of_selected_events_label.configure(text="Selected Events: {}".format(len(self.event_list.curselection())))
 
     def init_filter_list(self):
         filter_frame = tk.Frame(self.parent, bg="white")
-        filter_frame.grid(row=2, column=0)
+        filter_frame.grid(row=3, column=0)
         self.filter_checkboxes = []
 
         def checkbox_select_all_clicked():
@@ -89,7 +95,7 @@ class App(tk.Frame):
                     filter_selected_labels.append({"name": checkbox["checkbox_label_for"], "type": "Integer"})
             if filter_selected_labels != []:
                 self.print_line_chart(self.get_selected_events(), filter_selected_labels)
-        tk.Button(self.parent, text="Update", command=submit_filters).grid(row=3, column=0)
+        tk.Button(self.parent, text="Update", command=submit_filters).grid(row=4, column=0)
 
     def get_selected_events(self):
         all_items = self.event_list.get(0, tk.END) # tuple with text of all items in Listbox
@@ -118,7 +124,7 @@ class App(tk.Frame):
             return
         if filter_list_selection is None:
             filter_list_selection = self.labels
-        self.init_graph()
+        self.init_line_chart()
         colors = []
         for i in range(len(filter_list_selection)):
             colors.append('#%06X' % randint(0, 0xFFFFFF))
