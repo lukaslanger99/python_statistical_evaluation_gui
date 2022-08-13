@@ -17,7 +17,6 @@ class App(tk.Frame):
         self.init_event_picker()
         self.init_filter_list()
         self.init_config_buttons()
-        self.init_line_chart()
 
     def addLabel(self, name, type):
         label_name = name.replace(" ", "_")
@@ -60,7 +59,8 @@ class App(tk.Frame):
 
         def eventpicker_submit():
             self.set_text_number_of_selected_events_label()
-            self.print_line_chart(self.get_selected_events())
+            self.fill_line_chart(self.get_selected_events())
+            self.fill_pie_chart(self.get_selected_events())
             self.select_all_filter_checkbox_var.set(1)
             for checkbox in self.filter_checkboxes:
                 checkbox["value"].set(1)
@@ -94,7 +94,8 @@ class App(tk.Frame):
                 if checkbox["value"].get():
                     filter_selected_labels.append({"name": checkbox["checkbox_label_for"], "type": "Integer"})
             if filter_selected_labels != []:
-                self.print_line_chart(self.get_selected_events(), filter_selected_labels)
+                self.fill_line_chart(self.get_selected_events(), filter_selected_labels)
+                self.fill_pie_chart(self.get_selected_events(), filter_selected_labels)
         tk.Button(self.parent, text="Update", command=submit_filters).grid(row=4, column=0)
 
     def get_selected_events(self):
@@ -113,18 +114,20 @@ class App(tk.Frame):
         tk.Button(self.parent, text="Configure Labels", command=self.listener_config_button_submit).grid(row=1, column=8)
 
     def init_line_chart(self):
-        self.figure = Figure(figsize=(4,3), dpi=100)
-        self.subplot = self.figure.add_subplot(111)
-        bar1 = FigureCanvasTkAgg(self.figure, self.parent)
-        bar1.name='latheesh'
+        figure = Figure(figsize=(4,3), dpi=100)
+        self.line_chart_subplot = figure.add_subplot(111)
+        bar1 = FigureCanvasTkAgg(figure, self.parent)
         bar1.get_tk_widget().grid(row=3, column=1)
 
-    def print_line_chart(self, event_list_selection, filter_list_selection=None):
+    def fill_line_chart(self, event_list_selection, filter_list_selection=None):
         if not event_list_selection:
             return
         if filter_list_selection is None:
             filter_list_selection = self.labels
-        self.init_line_chart()
+        figure = Figure(figsize=(4,3), dpi=100)
+        line_chart_subplot = figure.add_subplot(111)
+        bar1 = FigureCanvasTkAgg(figure, self.parent)
+        bar1.get_tk_widget().grid(row=3, column=1)
         colors = []
         for i in range(len(filter_list_selection)):
             colors.append('#%06X' % randint(0, 0xFFFFFF))
@@ -136,9 +139,39 @@ class App(tk.Frame):
                 for event in event_list_selection:
                     dates.append(event["date"])
                     values.append(event["event_labels"][label["name"]])
-                self.subplot.plot(dates, values, color=colors[i], linestyle='dashed', linewidth = 1, marker='o', markerfacecolor=colors[i], markersize=5, label=label["name"])
+                line_chart_subplot.plot(dates, values, color=colors[i], linestyle='dashed', linewidth = 1, marker='o', markerfacecolor=colors[i], markersize=5, label=label["name"])
                 i = i + 1
-        self.subplot.legend()
+        line_chart_subplot.legend()
+
+    def fill_pie_chart(self, event_list_selection, filter_list_selection=None):
+        if not event_list_selection:
+            return
+        if filter_list_selection is None:
+            filter_list_selection = self.labels
+        colors = []
+        for i in range(len(filter_list_selection)):
+            colors.append('#%06X' % randint(0, 0xFFFFFF))
+        i = 0
+        for label in filter_list_selection:
+            figure = Figure(figsize=(4,3), dpi=100)
+            chart1 = FigureCanvasTkAgg(figure, self.parent)
+            chart1.get_tk_widget().grid(row=3, column=2+i)
+            pie_chart_subplot = figure.add_subplot(111)
+            if label["type"] == "Integer":
+                events_with_value = 0
+                for event in event_list_selection:
+                    if event["event_labels"][label["name"]]:
+                        events_with_value += 1
+                events_with_value_percent = int(100 * float(events_with_value)/float(len(filter_list_selection)))
+                pie_chart_subplot.pie(
+                    [events_with_value_percent, 100 - events_with_value_percent], 
+                    labels=[label["name"],None],
+                    colors=[colors[i], "#fff"], 
+                    radius=1,
+                    shadow=True
+                )
+                pie_chart_subplot.legend()
+                i = i + 1
 
     def listener_new_event_button_submit(self):
         new_event_window = tk.Toplevel(self.parent)
